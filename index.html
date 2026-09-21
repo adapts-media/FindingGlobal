@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-PQKMZZ7S');</script>
+    <!-- End Google Tag Manager -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      No title, description, or robots tag here on purpose: every route supplies its own via
+      head() (see src/routes/__root.tsx for the site-wide fallback), and TanStack Router's
+      HeadContent component renders exactly one of each from the merged route matches. A
+      static default here would just sit alongside that one, un-deduped, as a second title or
+      meta tag. Note for future edits: never type an opening angle bracket followed by a tag
+      name in this comment, spelled out plainly or not -- scripts/prerender.js and
+      server/src/lib/seo.js post-process this file with regexes that don't understand HTML
+      comments, so that text can get matched as if it were real markup.
+    -->
+    <meta property="og:site_name" content="Finding GLOBAL" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/png" href="/favicon.ico" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Finding GLOBAL",
+      "url": "https://findingglobal.com/",
+      "logo": "https://findingglobal.com/favicon.ico",
+      "description": "Connect with vetted marketing, branding, technology, and consulting agencies across the UAE, Saudi Arabia, Egypt, and Qatar."
+    }
+    </script>
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PQKMZZ7S"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <div id="root">
+      <header style="display:none">
+        <h1>Finding GLOBAL - Agency Procurement Network</h1>
+        <p>Connect with vetted marketing, branding, technology, and consulting agencies across the UAE, Saudi Arabia, Egypt, and Qatar.</p>
+      </header>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,82 @@
+name: Build & Deploy to VPS
+
+# Builds the site on GitHub's runners (full build: sitemap + vite build + Puppeteer prerender,
+# exactly what `npm run build` does locally), ships the result plus the Express server to the
+# VPS, and activates it with an atomic switch + automatic rollback (see deploy/release.sh).
+# Building here rather than on the VPS means the server needs no Chrome and no spare RAM.
+#
+# Triggers — none of them need anyone to run a build by hand:
+#   - push to main            new code goes live
+#   - wp-publish dispatch     WordPress calls GitHub when a post is published/updated (see deploy/README.md)
+#   - nightly 02:00 UTC       safety net; also picks up newly approved agencies
+#   - manual                  Actions tab > Run workflow
+on:
+  push:
+    branches: [main]
+  repository_dispatch:
+    types: [wp-publish]
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch: {}
+
+# One deploy at a time. If a burst of WordPress publishes queues several, GitHub keeps only the
+# newest waiting run, so they collapse into a single rebuild instead of piling up.
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (sitemap + vite build + prerender)
+        run: npm run build
+        env:
+          # Optional. Where prerender fetches agency/portfolio data from. Unset = the live site's API.
+          PRERENDER_API_ORIGIN: ${{ secrets.PRERENDER_API_ORIGIN }}
+
+      - name: Stage release
+        run: |
+          RELEASE="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
+          echo "RELEASE=$RELEASE" >> "$GITHUB_ENV"
+          mkdir -p stage/src/lib
+          cp -r dist stage/dist
+          rsync -a --exclude node_modules --exclude .env server/ stage/server/
+          cp src/lib/services.json stage/src/lib/   # read by server/src/lib/sitemap.js
+          cp -r deploy stage/deploy
+
+      - name: Configure SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$VPS_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+
+      - name: Upload and activate on VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          SSH="ssh -i $HOME/.ssh/deploy_key -p ${VPS_PORT:-22} -o StrictHostKeyChecking=yes"
+          rsync -az --delete -e "$SSH" stage/ "$VPS_USER@$VPS_HOST:/var/www/findingglobal/releases/$RELEASE/"
+          $SSH "$VPS_USER@$VPS_HOST" "bash /var/www/findingglobal/releases/$RELEASE/deploy/release.sh $RELEASE"

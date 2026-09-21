@@ -1,0 +1,42 @@
+name: Build & Deploy Frontend to cPanel
+
+# Runs the full build (sitemap + vite build + Puppeteer prerender, same as `npm run build`
+# locally) and pushes the resulting dist/ to cPanel over FTP/FTPS/SFTP. This is what fixes
+# blog posts silently falling back to the homepage's canonical: WordPress calls this via the
+# `wp-publish` repository_dispatch event, so every new/edited post gets a fresh prerendered
+# page instead of waiting for someone to notice and redeploy manually.
+#
+# NOTE: switched to manual-only now that deploy-vps.yml owns the automatic triggers. Leaving
+# push/wp-publish/nightly enabled on both would have two workflows deploying every change to two
+# different hosts. Kept as a fallback for the cPanel host until the VPS cutover is complete.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (sitemap + vite build + prerender)
+        run: npm run build
+
+      - name: Deploy dist/ to cPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.CPANEL_FTP_SERVER }}
+          username: ${{ secrets.CPANEL_FTP_USERNAME }}
+          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+          protocol: ${{ secrets.CPANEL_FTP_PROTOCOL || 'ftps' }} # 'ftps' (default), 'ftp', or 'sftp'
+          local-dir: ./dist/
+          server-dir: ${{ secrets.CPANEL_REMOTE_DIR }} # e.g. /public_html/ or /public_html/subfolder/
