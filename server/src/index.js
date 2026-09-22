@@ -25,6 +25,7 @@ import meetingRoutes from "./routes/meetings.js";
 import { renderBlogMeta, renderAgencyMeta } from "./lib/seo.js";
 import { getSitemapXml } from "./lib/sitemap.js";
 import { safeFetch } from "./lib/safe-fetch.js";
+import { legacyRedirects } from "./lib/redirects.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -107,6 +108,9 @@ const proxyLimiter = rateLimit({
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ limit: "5mb", extended: true }));
 app.use(morgan("dev"));
+
+// Old-site URLs -> their new pages (301). Runs before everything else that serves pages.
+app.use(legacyRedirects);
 
 app.get("/api/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));
 
