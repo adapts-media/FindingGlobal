@@ -19,6 +19,10 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    // Built JS/CSS are served from /static/ (not Vite's default /assets/). An early nginx config
+    // answered /assets/* with a redirect loop that carried a one-year "immutable" cache header,
+    // so browsers that visited then may have that loop cached; a new path sidesteps it for good.
+    assetsDir: 'static',
     chunkSizeWarningLimit: 1500,
   },
   server: {

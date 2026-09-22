@@ -200,19 +200,15 @@ export const Route = createFileRoute("/agencies/$slug")({
     if (loaderData?.type === "service" && slug && SLUG_TO_INFO[slug]) {
       const info = SLUG_TO_INFO[slug];
       const canonicalHref = `https://findingglobal.com/agencies/${slug}/`;
+      const title = `Top ${info.title} Companies 2026 | Finding Global`;
+      const description = `Find the top ${info.title} agencies and companies with verified reviews, budget ranges, and real project work. Tell us what you need and get matched.`;
       return {
         meta: [
-          { title: `Top ${info.title} Companies — Finding Global` },
-          {
-            name: "description",
-            content: `Explore vetted ${info.title} companies globally. Filter by service, country, budget, and rating.`,
-          },
+          { title },
+          { name: "description", content: description },
           { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" },
-          { property: "og:title", content: `Top ${info.title} Companies — Finding Global` },
-          {
-            property: "og:description",
-            content: `Explore the global directory of vetted ${info.title} marketing, tech, and creative partners.`,
-          },
+          { property: "og:title", content: title },
+          { property: "og:description", content: description },
         ],
         links: [
           { rel: "canonical", href: canonicalHref },

@@ -78,7 +78,12 @@ app.use(cors({
   }, 
   credentials: true 
 }));
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+// Helmet's default Content-Security-Policy is off: since Express started serving the site's HTML
+// (not just the API), its "self only" defaults blocked every external image (WordPress media,
+// agency logos from arbitrary hosts, avatars), Google Tag Manager/Analytics, Google Sign-In, and
+// in-browser WordPress fetches. The site ran without a CSP on its previous host. Helmet's other
+// protections (HSTS, nosniff, frameguard, referrer policy, ...) stay on.
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" }, contentSecurityPolicy: false }));
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10000, // Raised limit to prevent normal users from hitting it

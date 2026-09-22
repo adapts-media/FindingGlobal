@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs ON THE VPS, invoked by .github/workflows/deploy-vps.yml after it has rsynced a freshly
-# built release into /var/www/findingglobal/releases/<id>/ . Activates that release with no
+# built release into /opt/findingglobal/releases/<id>/ . Activates that release with no
 # downtime window that serves a half-built site: it installs dependencies inside the new
 # release directory first, flips the `current` symlink atomically, reloads the app, and rolls
 # back to the previous release by itself if the new one doesn't come up healthy.
@@ -8,7 +8,7 @@
 # Usage: release.sh <release-id>
 set -euo pipefail
 
-APP=/var/www/findingglobal
+APP=/opt/findingglobal
 REL="${1:?usage: release.sh <release-id>}"
 DIR="$APP/releases/$REL"
 
@@ -33,7 +33,7 @@ pm2 save >/dev/null
 
 echo "==> Health check"
 for i in $(seq 1 30); do
-  if curl -fsS --max-time 3 http://127.0.0.1:4000/api/health >/dev/null 2>&1; then
+  if curl -fsS --max-time 3 http://127.0.0.1:4100/api/health >/dev/null 2>&1; then
     echo "Healthy after ${i}s — release $REL is live."
     # Keep the 5 most recent releases for quick rollback; delete the rest.
     ls -1dt "$APP"/releases/*/ | tail -n +6 | xargs -r rm -rf

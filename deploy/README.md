@@ -1,7 +1,8 @@
 # Deploying to a VPS
 
-Everything runs on one Ubuntu/Debian VPS: nginx → Node (Express + the prerendered site) under
-PM2. **Nobody builds by hand.** GitHub Actions builds on its own runners and ships the result;
+Everything runs on one VPS (Red Hat- or Debian-family): nginx → Node (Express + the prerendered
+site) under PM2, listening on 127.0.0.1:4100. The setup is additive, so it's safe on a server
+that already hosts other sites. **Nobody builds by hand.** GitHub Actions builds on its own runners and ships the result;
 the VPS only has to run it.
 
 ```
@@ -30,7 +31,7 @@ GitHub Actions  ── npm run build (sitemap + vite + prerender) ──►  rsy
 GitHub, not here). Copy this `deploy/` folder to it and run:
 
 ```bash
-sudo bash setup-vps.sh findingglobal.com you@example.com
+sudo bash setup-vps.sh findingglobal.com
 ```
 
 **2. Deploy key.** On your computer: `ssh-keygen -t ed25519 -f deploy_key -N ""`. Append
@@ -39,9 +40,9 @@ sudo bash setup-vps.sh findingglobal.com you@example.com
 **3. Server secrets.** On the VPS:
 
 ```bash
-cp server.env.example /var/www/findingglobal/shared/server.env
-nano /var/www/findingglobal/shared/server.env     # fill in real values
-chown deploy:deploy /var/www/findingglobal/shared/server.env && chmod 600 /var/www/findingglobal/shared/server.env
+cp server.env.example /opt/findingglobal/shared/server.env
+nano /opt/findingglobal/shared/server.env     # fill in real values
+chown deploy:deploy /opt/findingglobal/shared/server.env && chmod 600 /opt/findingglobal/shared/server.env
 ```
 
 Use your existing production values (Mongo URI, JWT secret, SMTP, Ziina, Google client ID).
@@ -93,14 +94,14 @@ Bursts of publishes collapse into one rebuild.
 - **Manual rebuild:** Actions → Build & Deploy to VPS → Run workflow
 - **Roll back:** the last 5 releases are kept. On the VPS:
   ```bash
-  ls -1dt /var/www/findingglobal/releases/*      # newest first
-  sudo -u deploy bash /var/www/findingglobal/releases/<older-id>/deploy/release.sh <older-id>
+  ls -1dt /opt/findingglobal/releases/*      # newest first
+  sudo -u deploy bash /opt/findingglobal/releases/<older-id>/deploy/release.sh <older-id>
   ```
 - A failed deploy **rolls itself back** — the old release keeps serving and the Actions run goes red.
 
 ## Things worth knowing
 
-- Secrets exist only in `/var/www/findingglobal/shared/server.env`. They are never in git and
+- Secrets exist only in `/opt/findingglobal/shared/server.env`. They are never in git and
   never uploaded by the workflow.
 - The frontend is built with a relative API address (`/api`, from the tracked `.env.production`),
   so the site and API must share one domain — which this layout does.

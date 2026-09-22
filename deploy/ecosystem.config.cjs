@@ -4,7 +4,7 @@ module.exports = {
   apps: [
     {
       name: "findingglobal",
-      cwd: "/var/www/findingglobal/current/server", // server/.env (a link to shared/server.env) is read from here
+      cwd: "/opt/findingglobal/current/server", // server/.env (a link to shared/server.env) is read from here
       script: "src/index.js",
       exec_mode: "fork",
       instances: 1,
@@ -12,7 +12,7 @@ module.exports = {
       time: true, // timestamp log lines
       env: {
         NODE_ENV: "production",
-        PORT: 4000,
+        PORT: 4100,
       },
     },
   ],
